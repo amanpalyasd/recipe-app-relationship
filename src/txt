@@ -1,0 +1,28 @@
+ ADD FOOD DATA : /*    http://localhost:9091/api/foods/create  */
+
+{
+  "name": "Spaghetti Carbonara",
+  "description": "Classic Italian pasta dish.",
+  "ingredients": [
+    {
+      "name": "Spaghetti",
+      "quantity": "200g"
+    },
+    {
+      "name": "Eggs",
+      "quantity": "3 large"
+    },
+    {
+      "name": "Parmesan Cheese",
+      "quantity": "50g"
+    },
+    {
+      "name": "Pancetta",
+      "quantity": "100g"
+    },
+    {
+      "name": "Black Pepper",
+      "quantity": "1 tsp"
+    }
+  ]
+}
