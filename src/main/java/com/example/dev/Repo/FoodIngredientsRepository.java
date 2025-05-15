@@ -1,5 +1,6 @@
 package com.example.dev.Repo;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,5 +14,7 @@ import com.example.dev.Entity.Ingredient;
 public interface FoodIngredientsRepository extends JpaRepository<FoodIngredients, Long>{
 	
 	Optional<FoodIngredients> findByFoodAndIngredient(Food food, Ingredient ingredients);
+	
+	List<FoodIngredients> findByFood(Food food);
 
 }
