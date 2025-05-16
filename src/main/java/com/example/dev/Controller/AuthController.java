@@ -72,9 +72,10 @@ public class AuthController {
 		Authentication auth = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
 		try {
+			/*
 			User user = userRepository.findByUsername(authRequest.getUsername())
 					.orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
+*/
 			UserDetails userDetails = (UserDetails) auth.getPrincipal();
 			String token = jwtUtil.generateToken(userDetails);
 			return ResponseEntity.ok(new AuthResponse(token));

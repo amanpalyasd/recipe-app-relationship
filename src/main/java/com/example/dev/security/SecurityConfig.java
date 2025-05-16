@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -15,11 +16,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
 	@Autowired
@@ -42,7 +44,7 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.DELETE, "/api/foods/**").hasRole("ADMIN")
 						.requestMatchers(HttpMethod.GET, "/api/foods/**").hasAnyRole("ADMIN", "USER").anyRequest()
 						.authenticated())
-
+				.exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler()))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class).build();
@@ -62,17 +64,12 @@ public class SecurityConfig {
 		return provider;
 	}
 
-	/*
-	 * @Bean public SecurityFilterChain filterChain(HttpSecurity http) throws
-	 * Exception { http .csrf(csrf -> csrf.disable()) .authorizeHttpRequests(auth ->
-	 * auth .requestMatchers("/api/auth/**").permitAll()
-	 * .anyRequest().authenticated() ) .exceptionHandling(ex -> ex
-	 * .authenticationEntryPoint(customAuthenticationEntryPoint) // 🔥 plug it in
-	 * here ) .sessionManagement(session -> session
-	 * .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-	 * 
-	 * return http.build(); }
-	 * 
-	 */
-
+	@Bean
+	public AccessDeniedHandler customAccessDeniedHandler() {
+		return (request, response, accessDeniedException) -> {
+			response.setStatus(HttpStatus.FORBIDDEN.value());
+			response.setContentType("application/json");
+			response.getWriter().write("{\"error\": \"You do not have permission to access this resource.\"}");
+		};
+	}
 }

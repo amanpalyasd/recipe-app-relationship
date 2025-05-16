@@ -12,32 +12,17 @@ import org.springframework.stereotype.Service;
 import com.example.dev.Entity.User;
 import com.example.dev.Repo.UserRepository;
 
-
-
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-	 @Autowired
-	    private UserRepository userRepository;
+	@Autowired
+	private UserRepository userRepository;
 
-/*	 
-	 @Override
-	    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-	        User user = userRepository.findByUsername(username)
-	            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-	        return new CustomUserDetails(user);
-	    }
-
-	 */
-	 @Override
-	    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-	        User user = userRepository.findByUsername(username)
-	                      .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-	        return new org.springframework.security.core.userdetails.User(
-	            user.getUsername(),
-	            user.getPassword(),
-	            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-	        );
-	    }
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		User user = userRepository.findByUsername(username)
+				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
+				Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+	}
 }

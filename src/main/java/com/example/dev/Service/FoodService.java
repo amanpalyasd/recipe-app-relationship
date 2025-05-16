@@ -39,7 +39,7 @@ public class FoodService {
 
 	@Autowired
 	private UserRepository userRepository;
-   
+
 	/* ADDING FOOD METHOD */
 	public FoodResponseDTO createFood(FoodRequestDTO foodRequestDTO, Authentication authentication) {
 
@@ -123,93 +123,86 @@ public class FoodService {
 
 	/* UPDATE FOOD BASED ON FOOD_ID */
 	public FoodResponseDTO updateFood(Long foodId, FoodRequestDTO foodRequestDTO, Authentication authentication) {
-	    // Step 1: Get logged-in user's username
-	    String username = authentication.getName();
+		// Step 1: Get logged-in user's username
+		String username = authentication.getName();
 
-	    // Step 2: Fetch the user from DB
-	    User admin = userRepository.findByUsername(username)
-	        .orElseThrow(() -> new RuntimeException("User not found"));
+		// Step 2: Fetch the user from DB
+		User admin = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-	    // Step 3: Ensure role is ADMIN
-	    if (!admin.getRole().name().equals("ROLE_ADMIN")) {
-	        throw new AccessDeniedException("Only admins can update food.");
-	    }
+		// Step 3: Ensure role is ADMIN
+		if (!admin.getRole().name().equals("ADMIN")) {
+			throw new AccessDeniedException("Only admins can update food.");
+		}
 
-	    // Step 4: Get the food by ID
-	    Food food = foodRepository.findById(foodId)
-	        .orElseThrow(() -> new RuntimeException("Food not found with ID: " + foodId));
+		// Step 4: Get the food by ID
+		Food food = foodRepository.findById(foodId)
+				.orElseThrow(() -> new RuntimeException("Food not found with ID: " + foodId));
 
-	    // Step 5: Update food fields
-	    food.setName(foodRequestDTO.getName());
-	    food.setDescription(foodRequestDTO.getDescription());
+		// Step 5: Update food fields
+		food.setName(foodRequestDTO.getName());
+		food.setDescription(foodRequestDTO.getDescription());
 
-	    // Step 6: Remove old ingredient associations
-	    List<FoodIngredients> oldIngredients = foodIngredientRepository.findByFood(food);
-	    foodIngredientRepository.deleteAll(oldIngredients);
-	    food.getFoodIngredients().clear();
+		// Step 6: Remove old ingredient associations
+		List<FoodIngredients> oldIngredients = foodIngredientRepository.findByFood(food);
+		foodIngredientRepository.deleteAll(oldIngredients);
+		food.getFoodIngredients().clear();
 
-	    // Step 7: Add new ingredients
-	    for (IngredientsQuantityDTO ingredientDTO : foodRequestDTO.getIngredients()) {
-	        Ingredient ingredient = ingredientRepository.findByName(ingredientDTO.getName())
-	            .orElseGet(() -> {
-	                Ingredient newIng = new Ingredient();
-	                newIng.setName(ingredientDTO.getName());
-	                return ingredientRepository.save(newIng);
-	            });
+		// Step 7: Add new ingredients
+		for (IngredientsQuantityDTO ingredientDTO : foodRequestDTO.getIngredients()) {
+			Ingredient ingredient = ingredientRepository.findByName(ingredientDTO.getName()).orElseGet(() -> {
+				Ingredient newIng = new Ingredient();
+				newIng.setName(ingredientDTO.getName());
+				return ingredientRepository.save(newIng);
+			});
 
-	        FoodIngredients fi = new FoodIngredients();
-	        fi.setFood(food);
-	        fi.setIngredient(ingredient);
-	        fi.setQuantity(ingredientDTO.getQuantity());
-	        foodIngredientRepository.save(fi);
-	        food.getFoodIngredients().add(fi);
-	    }
+			FoodIngredients fi = new FoodIngredients();
+			fi.setFood(food);
+			fi.setIngredient(ingredient);
+			fi.setQuantity(ingredientDTO.getQuantity());
+			foodIngredientRepository.save(fi);
+			food.getFoodIngredients().add(fi);
+		}
 
-	    // Step 8: Save updated food
-	    Food updated = foodRepository.save(food);
+		// Step 8: Save updated food
+		Food updated = foodRepository.save(food);
 
-	    // Step 9: Convert to Response DTO
-	    List<IngredientResponseDTO> ingredients = updated.getFoodIngredients().stream()
-	        .map(fi -> new IngredientResponseDTO(fi.getIngredient().getName(), fi.getQuantity()))
-	        .collect(Collectors.toList());
+		// Step 9: Convert to Response DTO
+		List<IngredientResponseDTO> ingredients = updated.getFoodIngredients().stream()
+				.map(fi -> new IngredientResponseDTO(fi.getIngredient().getName(), fi.getQuantity()))
+				.collect(Collectors.toList());
 
-	    FoodResponseDTO response = new FoodResponseDTO();
-	    response.setId(updated.getId());
-	    response.setName(updated.getName());
-	    response.setDescription(updated.getDescription());
-	    response.setIngredients(ingredients);
+		FoodResponseDTO response = new FoodResponseDTO();
+		response.setId(updated.getId());
+		response.setName(updated.getName());
+		response.setDescription(updated.getDescription());
+		response.setIngredients(ingredients);
 
-	    return response;
+		return response;
 	}
 
 	/* DELETE FOOD BASED ON FOODi_ID */
 	public void deleteFood(Long foodId, Authentication authentication) {
-	    // Step 1: Get logged-in user's username
-	    String username = authentication.getName();
+		// Step 1: Get logged-in user's username
+		String username = authentication.getName();
 
-	    // Step 2: Fetch the user from DB
-	    User admin = userRepository.findByUsername(username)
-	        .orElseThrow(() -> new RuntimeException("User not found"));
+		// Step 2: Fetch the user from DB
+		User admin = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-	    // Step 3: Check if the user has admin role
-	    if (!admin.getRole().name().equals("ROLE_ADMIN")) {
-	        throw new AccessDeniedException("Only admins can delete food.");
-	    }
+		// Step 3: Check if the user has admin role
+		if (!admin.getRole().name().equals("ADMIN")) {
+			throw new AccessDeniedException("Only admins can delete food.");
+		}
 
-	    // Step 4: Find the food by ID
-	    Food food = foodRepository.findById(foodId)
-	        .orElseThrow(() -> new RuntimeException("Food not found with ID: " + foodId));
+		// Step 4: Find the food by ID
+		Food food = foodRepository.findById(foodId)
+				.orElseThrow(() -> new RuntimeException("Food not found with ID: " + foodId));
 
-	    // Step 5: Delete related FoodIngredients entries (if needed)
-	    List<FoodIngredients> foodIngredients = foodIngredientRepository.findByFood(food);
-	    foodIngredientRepository.deleteAll(foodIngredients);
+		// Step 5: Delete related FoodIngredients entries (if needed)
+		List<FoodIngredients> foodIngredients = foodIngredientRepository.findByFood(food);
+		foodIngredientRepository.deleteAll(foodIngredients);
 
-	    // Step 6: Delete the food
-	    foodRepository.delete(food);
+		// Step 6: Delete the food
+		foodRepository.delete(food);
 	}
 
-	
-	
-	
-	
 }
