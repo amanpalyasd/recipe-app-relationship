@@ -8,9 +8,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import com.example.dev.Entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -22,7 +26,7 @@ public class JwtUtil {
 
 	// IMPORTANT: Use at least 256-bit secret key (Base64-encoded)
 	private static final String SECRET_KEY = "MzJieXRlc2xvbmdzZWNyZXRrZXlmb3Jqc3V0aWx1dGlsaXR5"; // e.g. Base64 of 32
-																									// chars
+	private static final long ACCESS_TOKEN_VALIDITY = 1000 * 60 * 60 * 24;																				// chars
 
 	// 🔐 Decode Base64 and return Key object for signing
 	private Key getSignInKey() {
@@ -62,17 +66,30 @@ public class JwtUtil {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
+
 	// 🧾 Generate token with empty claims
 	public String generateToken(UserDetails userDetails) {
-		return generateToken(new HashMap<>(), userDetails);
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("username", userDetails.getUsername());
+		String roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority)
+				.collect(Collectors.joining(","));
+		claims.put("role", roles);
+		return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
+
 	}
 
-	// 🏷️ Generate token with custom claims
-	public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-		return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
-				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+	public String createToken(Map<String, Object> claims, String subject, long validity) {
+		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis() + validity))
 				.signWith(getSignInKey(), SignatureAlgorithm.HS256).compact();
+	}
+
+	public Long extractUserId(String token) {
+		return Long.valueOf(extractAllClaims(token).get("id").toString());
+	}
+
+	public String extractUserRole(String token) {
+		return extractAllClaims(token).get("role").toString();
 	}
 
 }

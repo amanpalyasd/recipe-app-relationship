@@ -10,6 +10,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +29,7 @@ import com.example.dev.Entity.Role;
 import com.example.dev.Entity.User;
 import com.example.dev.Repo.UserRepository;
 import com.example.dev.Service.FoodService;
-
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/foods")
 public class FoodController {
