@@ -66,18 +66,43 @@ public class JwtUtil {
 		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
 	}
 
-
+/*
 	// 🧾 Generate token with empty claims
 	public String generateToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("username", userDetails.getUsername());
+		
 		String roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority)
 				.collect(Collectors.joining(","));
 		claims.put("role", roles);
 		return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
 
 	}
-
+*/
+	
+	public String generateToken(UserDetails userDetails) {
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("username", userDetails.getUsername());
+		
+		var roles = userDetails.getAuthorities().stream()
+	            .map(GrantedAuthority::getAuthority)
+	            .filter(auth -> auth.startsWith("ROLE_"))
+	            .map(role -> role.substring(5)) // Remove "ROLE_" prefix
+	            .collect(Collectors.toList());
+		
+		var permissions = userDetails.getAuthorities().stream()
+	            .map(GrantedAuthority::getAuthority)
+	            .filter(auth -> !auth.startsWith("ROLE_"))
+	            .collect(Collectors.toList());
+		
+		
+		claims.put("roles", roles);
+		claims.put("permissions", permissions);
+		return createToken(claims, userDetails.getUsername(), ACCESS_TOKEN_VALIDITY);
+	}
+	
+	
+	
 	public String createToken(Map<String, Object> claims, String subject, long validity) {
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
 				.setExpiration(new Date(System.currentTimeMillis() + validity))

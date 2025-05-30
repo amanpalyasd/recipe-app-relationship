@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -130,8 +133,8 @@ public class FoodService {
 		User admin = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
 		// Step 3: Ensure role is ADMIN
-		if (!admin.getRole().name().equals("ADMIN")) {
-			throw new AccessDeniedException("Only admins can update food.");
+		if (admin.getRole() == null || !admin.getRole().getName().equalsIgnoreCase("ADMIN")) {
+		    throw new AccessDeniedException("Only admins can update food.");
 		}
 
 		// Step 4: Get the food by ID
@@ -182,18 +185,9 @@ public class FoodService {
 
 	/* DELETE FOOD BASED ON FOODi_ID */
 	public void deleteFood(Long foodId, Authentication authentication) {
-		// Step 1: Get logged-in user's username
+		
 		String username = authentication.getName();
-
-		// Step 2: Fetch the user from DB
 		User admin = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-
-		// Step 3: Check if the user has admin role
-		if (!admin.getRole().name().equals("ADMIN")) {
-			throw new AccessDeniedException("Only admins can delete food.");
-		}
-
-		// Step 4: Find the food by ID
 		Food food = foodRepository.findById(foodId)
 				.orElseThrow(() -> new RuntimeException("Food not found with ID: " + foodId));
 
@@ -206,3 +200,4 @@ public class FoodService {
 	}
 
 }
+

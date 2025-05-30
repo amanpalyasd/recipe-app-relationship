@@ -39,6 +39,7 @@ public class Food {
 	@OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonManagedReference
 	private List<FoodIngredients> foodIngredients = new ArrayList<>();
+	
 
 	public Long getId() {
 		return id;

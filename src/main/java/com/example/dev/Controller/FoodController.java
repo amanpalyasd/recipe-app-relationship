@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -29,7 +30,7 @@ import com.example.dev.Entity.Role;
 import com.example.dev.Entity.User;
 import com.example.dev.Repo.UserRepository;
 import com.example.dev.Service.FoodService;
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping("/api/foods")
 public class FoodController {
@@ -42,10 +43,11 @@ public class FoodController {
 
 	// Endpoint to create a new food
 
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAuthority('ADD_FOOD')")
 	@PostMapping("/create")
 	public ResponseEntity<?> createFood(@RequestBody FoodRequestDTO foodRequestDTO, Authentication authentication) {
 		try {
+			System.out.println("ENTRY");
 			FoodResponseDTO createdFood = foodService.createFood(foodRequestDTO, authentication);
 			return ResponseEntity.status(HttpStatus.CREATED).body(createdFood);
 		} catch (RuntimeException e) {
@@ -53,15 +55,15 @@ public class FoodController {
 		}
 	}
 
-	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	
+	@PreAuthorize("hasAuthority('VIEW_FOOD')")
 	@GetMapping
 	public ResponseEntity<List<FoodResponseDTO>> getAllFoods() {
 		return ResponseEntity.ok(foodService.getAllFoodWithIngredients());
 	}
 	
 	
-	
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAuthority('UPDATE_FOOD')")
 	@PutMapping("/update/{id}")
 	public ResponseEntity<?> updateFood(@PathVariable Long id, 
 	                                    @RequestBody FoodRequestDTO foodRequestDTO,
@@ -74,7 +76,8 @@ public class FoodController {
 	    }
 	}
 	
-	@PreAuthorize("hasRole('ADMIN')")
+	
+	@PreAuthorize("hasAuthority('DELETE_FOOD')")
 	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> deleteFood(@PathVariable Long id, Authentication authentication) {
 	    try {

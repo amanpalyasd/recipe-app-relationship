@@ -8,6 +8,19 @@ public class FoodResponseDTO {
     private String name;
     private String description;
     private List<IngredientResponseDTO> ingredients;
+    
+    
+     
+    
+	public FoodResponseDTO() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+	public FoodResponseDTO(String name, String description) {
+		super();
+		this.name = name;
+		this.description = description;
+	}
 	public Long getId() {
 		return id;
 	}

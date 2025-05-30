@@ -1,5 +1,7 @@
 package com.example.dev.security;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,12 +20,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+	 private final CorsConfigurationSource corsConfigurationSource;
+
+	    public SecurityConfig(CorsConfigurationSource corsConfigurationSource) {
+	        this.corsConfigurationSource = corsConfigurationSource;
+	    }
+	
 	@Autowired
 	private CustomUserDetailsService customUserDetailsService;
 
@@ -37,12 +49,16 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/foods/**").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.PUT, "/api/foods/**").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.DELETE, "/api/foods/**").hasRole("ADMIN")
-						.requestMatchers(HttpMethod.GET, "/api/foods/**").hasAnyRole("ADMIN", "USER").anyRequest()
+		return http
+				.csrf(csrf -> csrf.disable())
+				.cors(cors -> cors.configurationSource(corsConfigurationSource))
+				.authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**").permitAll()
+						//.requestMatchers(HttpMethod.POST, "/api/foods/**").hasRole("ADMIN")
+						//.requestMatchers(HttpMethod.PUT, "/api/foods/**").hasRole("ADMIN")
+						//.requestMatchers(HttpMethod.DELETE, "/api/foods/**").hasRole("ADMIN")
+						//.requestMatchers(HttpMethod.GET, "/api/foods/**").hasAnyRole("ADMIN", "USER")
+						//.requestMatchers("/api/admin/roles/**").hasRole("ADMIN")
+						.anyRequest()
 						.authenticated())
 				.exceptionHandling(ex -> ex.accessDeniedHandler(customAccessDeniedHandler()))
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -50,6 +66,19 @@ public class SecurityConfig {
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class).build();
 
 	}
+	
+	@Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of("http://localhost:8080"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+       
+        source.registerCorsConfiguration("/api/**", config);
+        return new CorsFilter(source);
+    }
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

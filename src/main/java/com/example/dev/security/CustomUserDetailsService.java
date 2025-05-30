@@ -1,8 +1,11 @@
 package com.example.dev.security;
 
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,7 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userRepository.findByUsername(username)
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
+		 Set<GrantedAuthority> permissionAuthorities = user.getRole().getPermissions().stream()
+			        .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+			        .collect(Collectors.toSet());
+
+		 authorities.addAll(permissionAuthorities);
+		 
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-				Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+				authorities);
 	}
 }

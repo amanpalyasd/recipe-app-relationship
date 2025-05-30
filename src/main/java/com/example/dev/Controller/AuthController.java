@@ -1,7 +1,6 @@
 package com.example.dev.Controller;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,19 +25,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.dev.Entity.Role;
 import com.example.dev.Entity.User;
-
+import com.example.dev.Repo.RoleRepository;
 import com.example.dev.Repo.UserRepository;
 import com.example.dev.dto.AuthRequest;
 import com.example.dev.dto.AuthResponse;
-import com.example.dev.dto.RegisterRequest;
+import com.example.dev.dto.RegisterRequestDTO;
 import com.example.dev.security.JwtUtil;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
-
-	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -50,22 +47,31 @@ public class AuthController {
 	private UserRepository userRepository;
 
 	@Autowired
+	private RoleRepository roleRepository;
+
+	@Autowired
 	private PasswordEncoder passwordEncoder;
 
 	@PostMapping("/register")
-	public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+	public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
 		try {
-			Role role;
-			if (request.getRole() == null || request.getRole().isEmpty()) {
-				role = Role.USER; // Assign default role
-			} else {
-				role = Role.valueOf(request.getRole().toUpperCase());
+
+			if (userRepository.existsByUsername(request.getUsername())) {
+				return ResponseEntity.badRequest()
+						.body(Map.of("error", "Username '" + request.getUsername() + "' is already taken."));
 			}
+			String roleName = (request.getRole() == null || request.getRole().isEmpty()) ? "USER"
+					: request.getRole().toUpperCase();
+
+			Role role = roleRepository.findByName(roleName)
+					.orElseThrow(() -> new RuntimeException("Role '" + roleName + "' not found."));
+
 			User user = new User();
 			user.setUsername(request.getUsername());
 			user.setPassword(passwordEncoder.encode(request.getPassword()));
 			user.setRole(role);
 			userRepository.save(user);
+
 			return ResponseEntity.ok("User registered successfully!");
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.badRequest().body(Map.of("error", "Invalid role provided: " + request.getRole()));
@@ -98,19 +104,5 @@ public class AuthController {
 					.body(Map.of("error", "Login failed: " + e.getMessage()));
 		}
 	}
-	
-	@PreAuthorize("hasRole('ADMIN')")
-	 @PostMapping("/promote/{userId}")
-	    public ResponseEntity<?> promoteToAdmin(@PathVariable Long userId) {
-	      Optional<User> optionalUser = userRepository.findById(userId);
-	      if(optionalUser.isPresent()) {
-	    	  User user = optionalUser.get();
-	    	  user.setRole(Role.ADMIN);
-	    	  userRepository.save(user);
-	    	  return ResponseEntity.ok("User promoted to ADMIN role successfully.");
-	      }else {
-	    	  return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
-	      }
-	    }
 
 }
