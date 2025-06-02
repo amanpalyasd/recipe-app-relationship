@@ -197,6 +197,7 @@ public class FoodService {
 
 		// Step 6: Delete the food
 		foodRepository.delete(food);
+		ingredientRepository.deleteUnusedIngredients();
 	}
 
 }

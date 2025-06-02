@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.dev.Entity.Permission;
 import com.example.dev.Entity.Role;
@@ -14,6 +16,7 @@ import com.example.dev.Repo.RoleRepository;
 import com.example.dev.Repo.UserRepository;
 import com.example.dev.dto.RoleChangeRequest;
 import com.example.dev.dto.RoleRequestDTO;
+import com.example.dev.dto.UserWithRoleDTO;
 
 @Service
 public class AdminService {
@@ -28,6 +31,8 @@ public class AdminService {
 		 this.permissionRepository=permissionRepository;
 	}
 
+	
+	
 	public Role createRole(RoleRequestDTO roleRequestDTO) {
 	    if (roleRepository.existsByName(roleRequestDTO.getRoleName().toUpperCase())) {
 	        throw new IllegalArgumentException("Role already exists");
@@ -41,21 +46,7 @@ public class AdminService {
 	    role.setName(roleRequestDTO.getRoleName().toUpperCase());
 	    role.setPermissions(permissions);
 	    return roleRepository.save(role);
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 	
 	public void changeUserRole(Long userId, RoleChangeRequest request) {
 	    if (request == null || request.getRoleName() == null || request.getRoleName().isBlank()) {
@@ -87,4 +78,10 @@ public class AdminService {
 	    role.getPermissions().addAll(permissions);
 	    roleRepository.save(role);
 	}
+	
+	public List<UserWithRoleDTO> getAllUsersWithRoles() {
+        return userRepository.findAllUsersWithRoles(); // or use findAllWithRoles() if you want roles eagerly
+    }
+	
+	
 }
