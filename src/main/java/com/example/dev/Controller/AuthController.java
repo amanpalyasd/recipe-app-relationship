@@ -1,6 +1,8 @@
 package com.example.dev.Controller;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.dev.Entity.Permission;
 import com.example.dev.Entity.Role;
 import com.example.dev.Entity.User;
 import com.example.dev.Repo.RoleRepository;
@@ -90,6 +93,11 @@ public class AuthController {
 
 			UserDetails userDetails = (UserDetails) auth.getPrincipal();
 			String token = jwtUtil.generateToken(userDetails);
+//			List<String> permissions = user.getRole().stream()
+//			        .flatMap(role -> role.getPermissions().stream())
+//			        .map(Permission::getName)
+//			        .distinct()
+//			        .collect(Collectors.toList());
 			return ResponseEntity.ok(new AuthResponse(token));
 		} catch (UsernameNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));

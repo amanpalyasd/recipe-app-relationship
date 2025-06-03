@@ -1,4 +1,4 @@
-package com.example.dev.Controller;
+	package com.example.dev.Controller;
 
 
 import java.util.List;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.dev.Entity.Role;
 import com.example.dev.Repo.PermissionRepository;
 import com.example.dev.Repo.RoleRepository;
+import com.example.dev.Repo.UserRepository;
 import com.example.dev.Service.AdminService;
 import com.example.dev.dto.PermissionAssignRequestDTO;
 import com.example.dev.dto.RoleChangeRequest;
@@ -39,7 +41,20 @@ public class AdminController {
 	private RoleRepository roleRepository;
 	
 	@Autowired
+	private UserRepository userRepository;
+	
+	@Autowired
 	private PermissionRepository permissionRepository;
+	
+	 @PreAuthorize("hasRole('ADMIN')")
+	 @DeleteMapping("/deleteUser/{id}")
+	    public ResponseEntity<String> deleteUser(@PathVariable("id") Long userId) {
+	        if (!userRepository.existsById(userId)) {
+	            return ResponseEntity.status(404).body("User not found with id: " + userId);
+	        }
+	        userRepository.deleteById(userId);
+	        return ResponseEntity.ok("User deleted successfully");
+	    }
 	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/createRole")
@@ -54,6 +69,17 @@ public class AdminController {
 	    }
 	}
 		
+	 // Delete role (DELETE /api/admin/roles/{id})
+	 @PreAuthorize("hasRole('ADMIN')")
+	 @DeleteMapping("/roles/{id}")
+	    public ResponseEntity<?> deleteRole(@PathVariable("id") Long roleId) {
+	        try {
+	            adminService.deleteRole(roleId);
+	            return ResponseEntity.ok("Role deleted successfully");
+	        } catch (RuntimeException e) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+	        }
+	    }
 	
 	//  Change role of a user - only admin with MANAGE_ROLES permission
 	@PreAuthorize("hasRole('ADMIN')")

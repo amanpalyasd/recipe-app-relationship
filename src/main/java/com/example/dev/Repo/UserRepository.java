@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.example.dev.Entity.Role;
 import com.example.dev.Entity.User;
 import com.example.dev.dto.UserWithRoleDTO;
 
@@ -17,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByUsername(String username);
 
+	 List<User> findByRole(Role role);
+	 
 	Optional<User> findByUsername(String username);
 	
 	@Query("SELECT new com.example.dev.dto.UserWithRoleDTO(u.id, u.username, r.name) FROM User u JOIN u.role r")
